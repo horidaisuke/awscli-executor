@@ -20,39 +20,41 @@ workflows:
   version: 2
   default:
     jobs:
-      - checkpoint-prepare
       - package-docker_build_awscli-executor:
-          requires:
-            - checkpoint-prepare
+          filters:
+            tags:
+              only: /.*/
       - checkpoint-package:
           requires:
             - package-docker_build_awscli-executor
-            - checkpoint-prepare
+          filters:
+            tags:
+              only: /.*/
       - checkpoint-verify:
           requires:
             - checkpoint-package
           filters:
+            tags:
+              only: /.*/
             branches:
               only: main
       - shipping-docker_push_awscli-executor:
           requires:
             - checkpoint-verify
+          filters:
+            tags:
+              only: /.*/
       - checkpoint-shipping:
           requires:
             - shipping-docker_push_awscli-executor
             - checkpoint-verify
           filters:
+            tags:
+              only: /.*/
             branches:
               only: main
 
 jobs:
-  checkpoint-prepare:
-    executor:
-      name: busybox
-    steps:
-      - run:
-          name: ckeckpoint of prepare stage
-          command: echo 'passed ckeckpoint of prepare stage'
   checkpoint-package:
     executor:
       name: busybox
