@@ -1,0 +1,240 @@
+version: 2.1
+
+# executors and orbs
+executors:
+  busybox:
+    docker:
+      - image: busybox:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+  docker:
+    docker:
+      - image: library/docker:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+
+# workflows and jobs
+workflows:
+  version: 2
+  default:
+    jobs:
+      - checkpoint-prepare
+      - package-docker_build_awscli-executor:
+          requires:
+            - checkpoint-prepare
+      - checkpoint-package:
+          requires:
+            - package-docker_build_awscli-executor
+            - checkpoint-prepare
+      - checkpoint-verify:
+          requires:
+            - checkpoint-package
+          filters:
+            branches:
+              only: main
+      - shipping-docker_push_awscli-executor:
+          requires:
+            - checkpoint-verify
+      - checkpoint-shipping:
+          requires:
+            - shipping-docker_push_awscli-executor
+            - checkpoint-verify
+          filters:
+            branches:
+              only: main
+
+jobs:
+  checkpoint-prepare:
+    executor:
+      name: busybox
+    steps:
+      - run:
+          name: ckeckpoint of prepare stage
+          command: echo 'passed ckeckpoint of prepare stage'
+  checkpoint-package:
+    executor:
+      name: busybox
+    steps:
+      - run:
+          name: ckeckpoint of package stage
+          command: echo 'passed ckeckpoint of package stage'
+  checkpoint-verify:
+    executor:
+      name: busybox
+    steps:
+      - run:
+          name: ckeckpoint of verify stage
+          command: echo 'passed ckeckpoint of verify stage'
+  checkpoint-shipping:
+    executor:
+      name: busybox
+    steps:
+      - run:
+          name: ckeckpoint of shipping stage
+          command: echo 'passed ckeckpoint of shipping stage'
+  package-docker_build_awscli-executor:
+    executor:
+      name: docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - command-docker_checksum:
+          context: awscli-executor
+      - restore_cache:
+          keys:
+            - prepare-docker_build_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+            - prepare-docker_build_awscli-executor-v1
+      - command-docker_load:
+          image: awscli-executor
+      - command-docker_build:
+          context: awscli-executor
+          image: awscli-executor
+      - command-docker_save:
+          image: awscli-executor
+      - save_cache:
+          key: prepare-docker_build_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+          paths:
+            - /tmp/docker
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - docker
+  shipping-docker_push_awscli-executor:
+    executor:
+      name: docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - command-docker_checksum:
+          context: awscli-executor
+      - restore_cache:
+          keys:
+            - shipping-docker_push_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+            - shipping-docker_push_awscli-executor-v1
+      - command-docker_load:
+          image: awscli-executor
+      - command-docker_build:
+          context: awscli-executor
+          image: awscli-executor
+      - command-docker_save:
+          image: awscli-executor
+      - save_cache:
+          key: shipping-docker_push_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+          paths:
+            - /tmp/docker
+      - command-docker_push:
+          image: awscli-executor
+          repo: awscli-executor
+
+# commands
+commands:
+  command-docker_checksum:
+    parameters:
+      context:
+        type: string
+    steps:
+      - run:
+          name: generate checksum.txt
+          command: |
+            rm -f /tmp/checksum.txt
+            cat $(find << parameters.context >> -type f | sort) >> /tmp/checksum.txt
+  command-docker_build:
+    parameters:
+      context:
+        type: string
+      dockerfile:
+        type: string
+        default: Dockerfile
+      target:
+        type: string
+        default: ""
+      image:
+        type: string
+      tag:
+        type: string
+        default: build
+    steps:
+      - run:
+          name: docker login
+          command: |
+            docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      - run:
+          name: docker build
+          command: |
+            if [ -z "<< parameters.target >>" ]; then
+              docker build --tag=<< parameters.image >>:<< parameters.tag >> --file=<< parameters.context >>/<< parameters.dockerfile >> << parameters.context >>
+            else
+              docker build --tag=<< parameters.image >>:<< parameters.tag >> --file=<< parameters.context >>/<< parameters.dockerfile >> --target << parameters.target >> << parameters.context >>
+            fi
+  command-docker_load:
+    parameters:
+      workdir:
+        type: string
+        default: /tmp/docker
+      image:
+        type: string
+      tag:
+        type: string
+        default: build
+    steps:
+      - run:
+          name: docker load
+          command: |
+            if [ -f "<< parameters.workdir >>/$(basename '<< parameters.image >>')_<< parameters.tag >>.tgz" ]; then
+              gunzip -c << parameters.workdir >>/$(basename '<< parameters.image >>')_<< parameters.tag >>.tgz | docker load
+              docker images << parameters.image >>:<< parameters.tag >>
+            else
+              echo "no cache"
+            fi
+  command-docker_save:
+    parameters:
+      workdir:
+        type: string
+        default: /tmp/docker
+      image:
+        type: string
+      tag:
+        type: string
+        default: build
+    steps:
+      - run:
+          name: docker save
+          command: |
+            if [ -n "$(docker images -q << parameters.image >>:<< parameters.tag >>)" ]; then
+              mkdir -p << parameters.workdir >>
+              docker save << parameters.image >>:<< parameters.tag >> $(docker history -q << parameters.image >>:<< parameters.tag >> | tail -n +2 | grep -v \<missing\> | tr '\n' ' ') | gzip > << parameters.workdir >>/$(basename '<< parameters.image >>')_<< parameters.tag >>.tgz
+            else
+              exit 1
+            fi
+  command-docker_push:
+    parameters:
+      image:
+        type: string
+      tag:
+        type: string
+        default: build
+      repo:
+        type: string
+    steps:
+      - run:
+          name: docker login
+          command: |
+            docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      - run:
+          name: docker push
+          command: |
+            if [ -n "$(docker images -q << parameters.image >>:<< parameters.tag >>)" ]; then
+              if [ -n "${CIRCLE_TAG}" ]; then
+                docker tag << parameters.image >>:<< parameters.tag >> ${DOCKER_LOGIN}/<< parameters.repo >>:${CIRCLE_TAG}
+                docker images ${DOCKER_LOGIN}/<< parameters.repo >>:${CIRCLE_TAG}
+                docker push ${DOCKER_LOGIN}/<< parameters.repo >>:${CIRCLE_TAG}
+              else
+                docker tag << parameters.image >>:<< parameters.tag >> ${DOCKER_LOGIN}/<< parameters.repo >>:latest
+                docker images ${DOCKER_LOGIN}/<< parameters.repo >>:latest
+                docker push ${DOCKER_LOGIN}/<< parameters.repo >>:latest
+              fi
+            else
+              exit 1
+            fi
