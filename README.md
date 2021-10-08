@@ -33,7 +33,7 @@ jobs:
 
 ## Tags
 
-* `18.06.1-cli-2.0.54`, `latest`
+* `18.06.2-cli-2.0.54`, `latest`
 
 ## License
 
