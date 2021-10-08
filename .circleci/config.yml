@@ -2,12 +2,6 @@ version: 2.1
 
 # executors and orbs
 executors:
-  busybox:
-    docker:
-      - image: busybox:latest
-        auth:
-          username: $DOCKER_LOGIN
-          password: $DOCKER_PASSWORD
   docker:
     docker:
       - image: library/docker:latest
@@ -15,68 +9,9 @@ executors:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
 
-# workflows and jobs
-workflows:
-  version: 2
-  default:
-    jobs:
-      - package-docker_build_awscli-executor:
-          filters:
-            tags:
-              only: /.*/
-      - checkpoint-package:
-          requires:
-            - package-docker_build_awscli-executor
-          filters:
-            tags:
-              only: /.*/
-      - checkpoint-verify:
-          requires:
-            - checkpoint-package
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: main
-      - shipping-docker_push_awscli-executor:
-          requires:
-            - checkpoint-verify
-          filters:
-            tags:
-              only: /.*/
-      - checkpoint-shipping:
-          requires:
-            - shipping-docker_push_awscli-executor
-            - checkpoint-verify
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: main
-
+# jobs and workflows
 jobs:
-  checkpoint-package:
-    executor:
-      name: busybox
-    steps:
-      - run:
-          name: ckeckpoint of package stage
-          command: echo 'passed ckeckpoint of package stage'
-  checkpoint-verify:
-    executor:
-      name: busybox
-    steps:
-      - run:
-          name: ckeckpoint of verify stage
-          command: echo 'passed ckeckpoint of verify stage'
-  checkpoint-shipping:
-    executor:
-      name: busybox
-    steps:
-      - run:
-          name: ckeckpoint of shipping stage
-          command: echo 'passed ckeckpoint of shipping stage'
-  package-docker_build_awscli-executor:
+  docker_build:
     executor:
       name: docker
     steps:
@@ -86,8 +21,8 @@ jobs:
           context: awscli-executor
       - restore_cache:
           keys:
-            - prepare-docker_build_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
-            - prepare-docker_build_awscli-executor-v1
+            - awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+            - awscli-executor-v1
       - command-docker_load:
           image: awscli-executor
       - command-docker_build:
@@ -96,14 +31,14 @@ jobs:
       - command-docker_save:
           image: awscli-executor
       - save_cache:
-          key: prepare-docker_build_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+          key: awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
           paths:
             - /tmp/docker
       - persist_to_workspace:
           root: /tmp
           paths:
             - docker
-  shipping-docker_push_awscli-executor:
+  docker_push:
     executor:
       name: docker
     steps:
@@ -113,22 +48,30 @@ jobs:
           context: awscli-executor
       - restore_cache:
           keys:
-            - shipping-docker_push_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
-            - shipping-docker_push_awscli-executor-v1
+            - awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
+            - awscli-executor-v1
       - command-docker_load:
           image: awscli-executor
-      - command-docker_build:
-          context: awscli-executor
-          image: awscli-executor
-      - command-docker_save:
-          image: awscli-executor
-      - save_cache:
-          key: shipping-docker_push_awscli-executor-v1-{{ checksum "/tmp/checksum.txt" }}
-          paths:
-            - /tmp/docker
       - command-docker_push:
           image: awscli-executor
           repo: awscli-executor
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - docker_build:
+          filters:
+            tags:
+              only: /.*/
+      - docker_push:
+          requires:
+            - docker_build
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: main
 
 # commands
 commands:
