@@ -1,4 +1,4 @@
-FROM library/docker:20.10.7
+FROM library/docker:20.10.8
 ENV AWS_CLI_VERSION 2.0.63
 ENV GLIBC_VER 2.31-r0
 RUN apk update \
@@ -8,6 +8,7 @@ RUN apk update \
  && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
  && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
  && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
+ && apk del libc6-compat \
  && apk add --virtual .build-deps \
     binutils \
     glibc-${GLIBC_VER}.apk \
