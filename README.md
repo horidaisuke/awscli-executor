@@ -33,7 +33,7 @@ jobs:
 
 ## Tags
 
-* `17.12.1-cli-2.0.63`, `latest`
+* `17.12.1-cli-2.1.39`, `latest`
 
 ## License
 
