@@ -33,7 +33,7 @@ jobs:
 
 ## Tags
 
-* `20.10.7-cli-2.2.47`, `latest`
+* `20.10.7-cli-2.0.63`, `latest`
 
 ## License
 
