@@ -9,10 +9,11 @@ RUN apk update \
  && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
  && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
  && apk del libc6-compat \
- && apk add --virtual .build-deps \
-    binutils \
+ && apk add --no-cache \
     glibc-${GLIBC_VER}.apk \
     glibc-bin-${GLIBC_VER}.apk \
+ && apk add --virtual .build-deps \
+    binutils \
     unzip \
     zip \
  && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_VERSION}.zip -o awscliv2.zip \
