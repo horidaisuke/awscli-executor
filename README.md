@@ -33,7 +33,7 @@ jobs:
 
 ## Tags
 
-* `19.03.15-cli-2.3.4`, `latest`
+* `19.03.15-cli-2.3.7`, `latest`
 
 ## License
 
