@@ -9,7 +9,7 @@ RUN apk update \
  && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
  && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
  && apk del libc6-compat \
- && apk add --no-cache \
+ && apk add --no-cache --force-overwrite \
     glibc-${GLIBC_VER}.apk \
     glibc-bin-${GLIBC_VER}.apk \
  && apk add --virtual .build-deps \
