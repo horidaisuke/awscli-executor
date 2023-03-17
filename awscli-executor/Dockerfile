@@ -1,5 +1,5 @@
 FROM library/docker:19.03.15
-ENV AWS_CLI_VERSION 2.10.4
+ENV AWS_CLI_VERSION 2.11.3
 ENV GLIBC_VER 2.31-r0
 RUN apk update \
  && apk add --no-cache \
