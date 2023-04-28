@@ -28,6 +28,9 @@ jobs:
       - command-docker_build:
           context: awscli-executor
           image: awscli-executor
+      - command-docker_run:
+          image: awscli-executor
+          command: aws --version
       - command-docker_save:
           image: awscli-executor
       - save_cache:
@@ -132,6 +135,24 @@ commands:
               docker images << parameters.image >>:<< parameters.tag >>
             else
               echo "no cache"
+            fi
+  command-docker_run:
+    parameters:
+      image:
+        type: string
+      tag:
+        type: string
+        default: build
+      command:
+        type: string
+    steps:
+      - run:
+          name: docker run
+          command: |
+            if [ -n "$(docker images -q << parameters.image >>:<< parameters.tag >>)" ]; then
+              docker run --rm --name temporary << parameters.image >>:<< parameters.tag >> << parameters.command >>
+            else
+              exit 1
             fi
   command-docker_save:
     parameters:
