@@ -1,4 +1,4 @@
-FROM library/docker:24.0.6
+FROM library/docker:24.0.7
 ENV AWS_CLI_VERSION 2.13.28
 ENV GLIBC_VER 2.31-r0
 RUN apk update \
