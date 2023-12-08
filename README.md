@@ -35,7 +35,7 @@ jobs:
 
 Tags name is made from join of [simple tags of docker](https://hub.docker.com/_/docker) and [tags of awscli](https://github.com/aws/aws-cli/tags).
 
-* `24.0.7-cli-2.13.33`, `latest`
+* `24.0.7-cli-2.14.6`, `latest`
 
 ## License
 
