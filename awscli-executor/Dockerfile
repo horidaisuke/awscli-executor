@@ -1,5 +1,5 @@
 FROM library/docker:24.0.7-alpine3.18
-ENV AWS_CLI_VERSION 2.14.6
+ENV AWS_CLI_VERSION 2.15.7
 ENV GLIBC_VER 2.31-r0
 RUN apk update \
  && apk add --no-cache \
