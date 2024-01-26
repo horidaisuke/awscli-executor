@@ -1,4 +1,4 @@
-FROM library/docker:24.0.7-alpine3.18
+FROM library/docker:25.0.1
 ENV AWS_CLI_VERSION 2.15.14
 ENV GLIBC_VER 2.31-r0
 RUN apk update \
