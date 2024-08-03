@@ -1,4 +1,4 @@
-FROM library/docker:26.1.4
+FROM library/docker:27.1.1
 ENV AWSCLI_VERSION 2.17.22
 RUN apk update \
  && apk add --no-cache \
