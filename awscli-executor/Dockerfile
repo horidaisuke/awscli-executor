@@ -5,7 +5,9 @@ RUN apk update \
     bash \
     curl \
     groff \
-    python3 \
+ && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.19/main \
+    python3~=3.11 \
+    python3-dev~=3.11 \
  && apk add --virtual .build-deps \
     cmake \
     g++ \
@@ -15,7 +17,6 @@ RUN apk update \
     libffi-dev \
     make \
     openssl-dev \
-    python3-dev \
     tar \
  && curl https://awscli.amazonaws.com/awscli-${AWSCLI_VERSION}.tar.gz | tar -xz \
  && cd awscli-${AWSCLI_VERSION} \
