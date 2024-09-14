@@ -5,6 +5,7 @@ RUN apk update \
     bash \
     curl \
     groff \
+    ncurses-terminfo-base=6.4_p20240420-r1 \
  && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.19/main \
     python3~=3.11 \
     python3-dev~=3.11 \
