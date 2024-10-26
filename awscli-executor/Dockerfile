@@ -1,5 +1,5 @@
 FROM library/docker:26.1.4
-ENV AWSCLI_VERSION 2.17.51
+ENV AWSCLI_VERSION 2.18.15
 RUN apk update \
  && apk add --no-cache \
     bash \
