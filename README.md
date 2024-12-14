@@ -1,5 +1,7 @@
-# awscli-executor
-Circleci executor installed aws cli
+# [Departed] awscli-executor
+
+This repository will be no longer maintenance.
+Recommend to use [Official Orb](https://circleci.com/developer/ja/orbs/orb/circleci/aws-cli).
 
 ## Usage
 
